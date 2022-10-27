@@ -1,0 +1,64 @@
+service: serverless-template
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  memorySize: 192
+  timeout: 30
+  stage: production
+  region: eu-west-1
+
+package:
+  individually: true
+  excludeDevDependencies: true
+  patterns:
+    - '!coverage/**'
+    - '!migrations/**'
+    - '!src/**'
+
+custom:
+  serverless-offline:
+    noPrependStageInUrl: true
+
+functions:
+  migrate-db:
+    handler: ./src/handlers/migration.latest
+    timeout: 900
+    package:
+      patterns:
+        - 'migrations/**'
+        - 'src/handlers/migration.js'
+
+  migrate-db-rollback:
+    handler: ./src/handlers/migration.rollback
+    timeout: 900
+    package:
+      patterns:
+        - 'migrations/**'
+        - 'src/handlers/migration.js'
+
+  hello:
+    handler: ./src/handlers/hello.handler
+    package:
+      patterns:
+        - 'migrations/**'
+        - 'src/handlers/hello.js'
+    events:
+      - http:
+          method: GET
+          path: /hello
+
+  api:
+    handler: ./src/api/handler.handler
+    package:
+      patterns:
+        - 'migrations/**'
+        - 'src/api/**'
+    events:
+      - http:
+          method: ANY
+          path: /api/{proxy+}
