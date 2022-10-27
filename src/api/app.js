@@ -10,20 +10,25 @@ import User from './models/user.js'
 import Task from './models/task.js'
 
 export default function createApp (opts = {}) {
+  const { logger = false, knexConfig, documentation } = opts
+
   const app = fastify({
-    logger: opts.logger
+    logger,
+    rewriteUrl: (req) => {
+      return req.url.replace('/api', '')
+    }
   })
 
   app.register(fastifyDatabase, {
-    knexConfig: opts.knexConfig,
+    knexConfig,
     models: [
       User,
       Task
     ]
   })
 
-  if (opts.documentation) {
-    app.register(fastifySwagger, opts.documentation)
+  if (documentation) {
+    app.register(fastifySwagger, documentation)
 
     app.register(fastifySwaggerUi, {
       routePrefix: '/api/documentation',
@@ -54,10 +59,8 @@ export default function createApp (opts = {}) {
     done(null, newPayload)
   })
 
-  app.register(async (app) => {
-    app.register(import('./routes/user.js'), { prefix: 'users' })
-    app.register(import('./routes/task.js'), { prefix: 'tasks' })
-  }, { prefix: 'api' })
+  app.register(import('./routes/user.js'), { prefix: 'users' })
+  app.register(import('./routes/task.js'), { prefix: 'tasks' })
 
   return app
 }
