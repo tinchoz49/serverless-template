@@ -42,6 +42,23 @@ export default function createApp (opts = {}) {
     ]
   })
 
+  app.addSchema({
+    $id: 'ErrorResponse',
+    description: 'Error response.',
+    type: 'object',
+    properties: {
+      statusCode: {
+        type: 'number'
+      },
+      error: {
+        type: 'string'
+      },
+      message: {
+        type: 'string'
+      }
+    }
+  })
+
   app.register(fastifySensible)
 
   app.decorate('verifyCookie', async (request, reply) => {

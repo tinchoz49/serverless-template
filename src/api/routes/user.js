@@ -1,13 +1,12 @@
+import S from 'fluent-json-schema'
+
 export default async (app) => {
   const { User } = app.database.models
 
   app.get('/', {
     async handler () {
-      return await User.query()
+      return User.query()
     },
-    // preHandler: app.auth([
-    //   app.verifyCookie
-    // ]),
     schema: {
       response: {
         '2xx': {
@@ -22,48 +21,63 @@ export default async (app) => {
             }
           }
         },
-        '4xx': {
-          description: 'Error response.',
-          type: 'object',
-          properties: {
-            statusCode: {
-              type: 'number'
-            },
-            error: {
-              type: 'string'
-            },
-            message: {
-              type: 'string'
-            }
-          }
+        default: {
+          $ref: 'ErrorResponse'
         }
       }
     }
   })
 
-  // app.get('/:id', {
-  //   schema: {
-  //     response: {
-  //       default: {
-  //         type: 'object',
-  //         properties: {
-  //           data: {
-  //             type: 'array',
-  //             items: User.jsonSchema
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }, async (req) => {
-  //   return {
-  //     data: [{
-  //       username: 'hola',
-  //       email: 'test@test.com',
-  //       password: 'test12354687',
-  //       birthday: '2020-01-01',
-  //       test: 'test'
-  //     }]
-  //   }
-  // })
+  app.get('/:id', {
+    async handler (req) {
+      return (await User.query().findById(req.params.id) || null)
+    },
+    schema: {
+      params: S
+        .object()
+        .prop('id', S.number().required()),
+      response: {
+        '2xx': {
+          type: 'object',
+          properties: {
+            data: {
+              anyOf: [
+                {
+                  $ref: 'UserResponse'
+                },
+                { type: 'null' }
+              ]
+            }
+          }
+        },
+        default: {
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  })
+
+  app.post('/', {
+    async handler (req) {
+      return await User.query().insert(req.body)
+    },
+    schema: {
+      body: {
+        $ref: 'UserRequest'
+      },
+      response: {
+        '2xx': {
+          type: 'object',
+          properties: {
+            data: {
+              $ref: 'UserResponse'
+            }
+          }
+        },
+        default: {
+          $ref: 'ErrorResponse'
+        }
+      }
+    }
+  })
 }

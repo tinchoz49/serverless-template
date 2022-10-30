@@ -4,7 +4,7 @@ import Base from './base.js'
 import Task from './task.js'
 
 const jsonSchema = S.object()
-  .prop('username', S.string().required())
+  .prop('username', S.string().required().minLength(8))
   .prop('email', S.string().format(S.FORMATS.EMAIL).required())
   .prop('password', S.string().minLength(8).required())
   .prop(
